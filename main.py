@@ -10,7 +10,6 @@ from celery_config import celery_worker
 import requests
 from PIL import Image
 from io import BytesIO
-import redis
 from database import ImageProcessing, SessionLocal
 import aiohttp
 import asyncio
@@ -20,9 +19,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = FastAPI()
 
-# Configure Redis
-redis_client = redis.Redis(host='localhost', port=6379,
-                           db=0, decode_responses=True)
+
+# Configure Logging
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 @app.post("/upload")
@@ -43,7 +43,7 @@ def upload_csv(request: Request, file: UploadFile = File(...)):
     """
     try:
         csv_data = file.file.read().decode('utf-8')
-        print("CSV Received")
+        logging.debug("CSV Received")
         task = process_csv.apply_async(args=[csv_data, str(request.base_url)])
         return {"task_id": task.id}
     except Exception as e:
@@ -131,10 +131,10 @@ def process_csv(csv_data: str, base_url: str):
             webhook_url = "http://127.0.0.1:8002/webhook"
             asyncio.run(trigger_webhook(webhook_url, results))
         except Exception as e:
-            print(f"Error triggering webhook: {e}")
+            logging.error(f"Error triggering webhook: {e}")
         return results
     except Exception as e:
-        logging.error(f"Error processing CSV: {e}")
+        logging.exception(f"Error processing CSV: {e}")
         entry = ImageProcessing(id=process_csv.request.id, serial_number=serial_number, data=json.dumps({"error": str(e)}),
                                 status='Failed')
         db.add(entry)
