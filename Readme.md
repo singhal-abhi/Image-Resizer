@@ -64,9 +64,15 @@ uvicorn main:app --port=8000
 ```
 
 ### 2️⃣ Start Celery Worker
-```sh
-celery -A celery_config.celery_worker worker --loglevel=info
-```
+- **On Linux/macOS**
+    ```sh
+    celery -A celery_config worker --autoscale=4,1 -l info
+    ```
+- **On Windows**
+    ```sh
+    celery -A celery_config worker --pool=solo -l info
+    ```
+
 ### 3️⃣ Start Webhook Receiver(Optional)
 ```sh
 uvicorn webhook_receiver:app --port=8002
