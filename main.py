@@ -131,7 +131,7 @@ def process_csv(csv_data: str, base_url: str):
             webhook_url = "http://127.0.0.1:8002/webhook"
             asyncio.run(trigger_webhook(webhook_url, results))
         except Exception as e:
-            logging.error(f"Error triggering webhook: {e}")
+            print(f"Error triggering webhook: {e}")
         return results
     except Exception as e:
         logging.error(f"Error processing CSV: {e}")
